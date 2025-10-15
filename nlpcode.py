@@ -1,29 +1,28 @@
-# ner_app.py
-
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag, ne_chunk
-from nltk.tree import Tree
 import streamlit as st
+import nltk
+from nltk import pos_tag, ne_chunk
+from nltk.tokenize import word_tokenize
+from nltk.tree import Tree
 
-# Download necessary data once
-nltk.download('punkt')
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
-nltk.download('averaged_perceptron_tagger')
+# ✅ Ensure required NLTK resources are downloaded every time the app starts
+nltk.download('punkt', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
+nltk.download('maxent_ne_chunker', quiet=True)
+nltk.download('words', quiet=True)
 
-# Predefined name and city lists
+st.title("🧠 Named Entity Recognition (NER) App")
+st.write("Enter a sentence and extract entities like PERSON and GPE (locations).")
+
 indian_names = ["Narendra", "Modi", "Sachin", "Tendulkar", "Ramesh", "Kumar"]
 indian_cities = ["Mumbai", "Bengaluru", "Delhi", "Chennai", "Kolkata"]
 
-# Entity extraction function
 def extract_entities(sentence):
     tokens = word_tokenize(sentence)
     tags = pos_tag(tokens)
     tree = ne_chunk(tags)
+
     entities = {"PERSON": [], "GPE": []}
 
-    # Extract entities from tree
     for subtree in tree:
         if isinstance(subtree, Tree):
             label = subtree.label()
@@ -31,7 +30,6 @@ def extract_entities(sentence):
             if label in entities:
                 entities[label].append(name)
 
-    # Rule-based Indian name/city detection
     for token in tokens:
         if token in indian_names and token not in entities["PERSON"]:
             entities["PERSON"].append(token)
@@ -40,19 +38,12 @@ def extract_entities(sentence):
 
     return entities
 
-# Streamlit UI
-st.title("🧠 Named Entity Recognition (NER) System")
-st.markdown("**Built using NLTK and Rule-based Methods — No spaCy Required!**")
-
-# Input box
-sentence = st.text_area("Enter a sentence:", "Narendra Modi is the Prime Minister of India.")
-
-# Process button
+sentence = st.text_area("Enter a sentence:")
 if st.button("Extract Entities"):
-    result = extract_entities(sentence)
-    st.subheader("🔍 Extracted Entities")
-    st.json(result)
+    if sentence.strip():
+        result = extract_entities(sentence)
+        st.success("Entities extracted successfully!")
+        st.write(result)
+    else:
+        st.warning("Please enter a sentence.")
 
-# Footer
-st.markdown("---")
-st.caption("Developed using NLTK • Hybrid (Statistical + Rule-Based) NER System")
